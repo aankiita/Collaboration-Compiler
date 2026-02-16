@@ -13,7 +13,7 @@ const io = require("socket.io")(server, { cors: { origin: "*" } });
 connectDB();
 
 app.use(cors({
-    origin: "https://collaboration-compiler.vercel.app", 
+    origin: "*", 
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true
 }));
