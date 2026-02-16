@@ -18,63 +18,78 @@ export default function Editor({ socketRef, roomId, onCodeChange }) {
 
   useEffect(() => {
     async function init() {
-      editorRef.current = Codemirror.fromTextArea(
-        document.getElementById("realtimeEditor"),
-        {
-          mode: { name: "javascript", json: true },
-          theme: "dracula",
-          autoCloseTags: true,
-          autoCloseBrackets: true,
-          lineNumbers: true,
-        }
-      );
+      if (!editorRef.current) {
+        editorRef.current = Codemirror.fromTextArea(
+          document.getElementById("realtimeEditor"),
+          {
+            mode: { name: "javascript", json: true },
+            theme: "dracula",
+            autoCloseTags: true,
+            autoCloseBrackets: true,
+            lineNumbers: true,
+          }
+        );
 
-      editorRef.current.on("change", (instance, changes) => {
-        const { origin } = changes;
-        const code = instance.getValue();
-        onCodeChange(code);
-        if (origin !== "setValue") {
-          socketRef.current.emit(ACTIONS.CODE_CHANGE, {
-            roomId,
-            code,
-          });
-        }
-      });
+        editorRef.current.on("change", (instance, changes) => {
+          const { origin } = changes;
+          const code = instance.getValue();
+          onCodeChange(code);
+          if (origin !== "setValue" && socketRef.current) {
+            socketRef.current.emit(ACTIONS.CODE_CHANGE, {
+              roomId,
+              code,
+            });
+          }
+        });
+      }
     }
     init();
-  }, []);
+
+    return () => {
+      if (editorRef.current) {
+        editorRef.current.toTextArea();
+        editorRef.current = null;
+      }
+    };
+  }, [onCodeChange, roomId, socketRef]);
 
   useEffect(() => {
-    if (socketRef.current) {
-      socketRef.current.on(ACTIONS.CODE_CHANGE, ({ code }) => {
-        if (code !== null) {
-          editorRef.current.setValue(code);
+    const socket = socketRef.current; 
+
+    if (socket) {
+      socket.on(ACTIONS.CODE_CHANGE, ({ code }) => {
+        if (code !== null && editorRef.current) {
+          if (editorRef.current.getValue() !== code) {
+            editorRef.current.setValue(code);
+          }
         }
       });
     }
 
     return () => {
-      if (socketRef.current) {
-        socketRef.current.off(ACTIONS.CODE_CHANGE);
+      if (socket) {
+        socket.off(ACTIONS.CODE_CHANGE);
       }
     };
-  }, [socketRef.current]);
+  }, [socketRef]);
 
   const handleLanguageChange = (e) => {
     const lang = e.target.value;
     setLanguage(lang);
     const modeMap = {
-        javascript: "javascript",
-        python: "python",
-        java: "text/x-java",
-        c: "text/x-csrc",
-        cpp: "text/x-c++src"
+      javascript: "javascript",
+      python: "python",
+      java: "text/x-java",
+      c: "text/x-csrc",
+      cpp: "text/x-c++src",
     };
-    editorRef.current.setOption("mode", modeMap[lang]);
+    if (editorRef.current) {
+      editorRef.current.setOption("mode", modeMap[lang]);
+    }
   };
 
   const runCode = async () => {
-    const sourceCode = editorRef.current.getValue();
+    const sourceCode = editorRef.current?.getValue();
     if (!sourceCode) return;
 
     setIsLoading(true);
@@ -82,32 +97,34 @@ export default function Editor({ socketRef, roomId, onCodeChange }) {
     setOutput([]);
 
     try {
-      const response = await fetch("https://collaboration-compiler-1.onrender.com/compile", {
-        method: "POST",
-        headers: {
+      const response = await fetch(
+        "https://collaboration-compiler-1.onrender.com/compile",
+        {
+          method: "POST",
+          headers: {
             "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          code: sourceCode,
-          language: language,
-        }),
-      });
+          },
+          body: JSON.stringify({
+            code: sourceCode,
+            language: language,
+          }),
+        }
+      );
 
       const data = await response.json();
       if (data.output) {
-          setOutput(data.output.split("\n"));
-          setIsError(false);
+        setOutput(data.output.split("\n"));
+        setIsError(false);
       } else if (data.error) {
-          setIsError(true);
-          setOutput([data.error]);
+        setIsError(true);
+        setOutput([data.error]);
       } else {
-          setOutput(["Execution complete (No Output)"]);
+        setOutput(["Execution complete (No Output)"]);
       }
-
     } catch (error) {
       console.error(error);
       setIsError(true);
-      setOutput(["Failed to connect to server. Is it running?", error.message]);
+      setOutput(["Failed to connect to server.", error.message]);
     } finally {
       setIsLoading(false);
     }
@@ -135,7 +152,11 @@ export default function Editor({ socketRef, roomId, onCodeChange }) {
           onClick={runCode}
           disabled={isLoading}
           className={`flex items-center gap-2 px-4 py-1.5 rounded font-bold text-white transition-all
-            ${isLoading ? "bg-gray-600 cursor-not-allowed" : "bg-green-600 hover:bg-green-500 shadow-lg hover:shadow-green-500/30"}`}
+            ${
+              isLoading
+                ? "bg-gray-600 cursor-not-allowed"
+                : "bg-green-600 hover:bg-green-500 shadow-lg"
+            }`}
         >
           {isLoading ? "Running..." : "▶ Run Code"}
         </button>
@@ -146,19 +167,24 @@ export default function Editor({ socketRef, roomId, onCodeChange }) {
       </div>
 
       <div className="h-48 bg-[#1e1e1e] border-t border-gray-700 flex flex-col">
-        <div className="px-4 py-1 bg-[#252526] text-gray-400 text-xs font-bold uppercase tracking-wider border-b border-gray-700 flex justify-between">
+        <div className="px-4 py-1 bg-[#252526] text-gray-400 text-xs font-bold uppercase border-b border-gray-700 flex justify-between">
           <span>Terminal Output</span>
           {isError && <span className="text-red-400">Error Detected</span>}
         </div>
         <div className="p-4 overflow-auto font-mono text-sm h-full">
-          {output ? (
+          {output && output.length > 0 ? (
             output.map((line, i) => (
-              <div key={i} className={`${isError ? "text-red-400" : "text-gray-300"}`}>
+              <div
+                key={i}
+                className={`${isError ? "text-red-400" : "text-gray-300"}`}
+              >
                 {line}
               </div>
             ))
           ) : (
-            <div className="text-gray-600 italic">Click "Run Code" to see output here...</div>
+            <div className="text-gray-600 italic">
+              Click "Run Code" to see output here...
+            </div>
           )}
         </div>
       </div>
