@@ -12,8 +12,12 @@ const io = require("socket.io")(server, { cors: { origin: "*" } });
 
 connectDB();
 
-app.use(cors());
+app.use(cors({
+    origin: "*", 
+    credentials: true
+}));
 app.use(express.json());
+const PORT = process.env.PORT || 5000;
 app.use(express.urlencoded({ extended: true }));
 app.use("/api/auth", authRoutes);
 app.post("/compile", async (req, res) => {
@@ -46,4 +50,4 @@ app.post("/compile", async (req, res) => {
     }
 });
 require("./sockets/codeSocket")(io);
-server.listen(5000, () => console.log("Server running on 5000"));
+server.listen(PORT, () => console.log(`Server running on ${PORT}`));
