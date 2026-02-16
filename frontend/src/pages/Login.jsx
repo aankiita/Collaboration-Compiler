@@ -25,7 +25,7 @@ export default function Login() {
     setShowRegister(false); 
 
     try {
-      const res = await API.post("/auth/login", { email, password });
+      const res = await API.post("/api/auth/login", { email, password });
       login(res.data.token);
       navigate("/dashboard", { state: { username: res.data.name|| email } });
     } catch (err) {
