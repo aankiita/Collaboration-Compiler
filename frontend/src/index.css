@@ -1,0 +1,82 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-gray-900 text-gray-200 font-sans antialiased;
+  }
+  
+  h1, h2, h3 {
+    @apply font-bold tracking-tight text-white;
+  }
+}
+
+@layer components {
+  .app-container {
+    @apply min-h-screen flex flex-col;
+  }
+
+  .main-content {
+    @apply flex-grow container mx-auto px-4 py-8;
+  }
+
+  .auth-card {
+    @apply max-w-md mx-auto mt-10 bg-gray-800 p-8 rounded-lg shadow-xl border border-gray-700;
+  }
+
+  .auth-title {
+    @apply text-3xl mb-6 text-center text-blue-400 font-bold;
+  }
+
+  .input-group {
+    @apply mb-4;
+  }
+
+  
+  .input-field {
+    @apply w-full bg-gray-50 text-gray-900 border border-gray-300 rounded p-3 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors;
+  }
+
+  .btn-primary {
+    @apply w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded transition-colors duration-200;
+  }
+
+  .btn-secondary {
+    @apply bg-gray-700 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded transition-colors;
+  }
+  
+  .btn-logout {
+    @apply bg-red-600 hover:bg-red-700 text-white text-sm font-bold py-2 px-4 rounded transition-colors;
+  }
+
+  
+  .nav-container {
+    @apply bg-gray-800 border-b border-gray-700 text-white p-4 flex justify-between items-center shadow-lg;
+  }
+
+  .nav-logo {
+    @apply text-2xl font-mono text-blue-400 font-bold tracking-wider;
+  }
+
+  .nav-links {
+    @apply flex space-x-6 items-center;
+  }
+
+  .nav-link {
+    @apply text-gray-300 hover:text-white transition-colors;
+  }
+
+  
+  .editor-container {
+    @apply max-w-6xl mx-auto;
+  }
+  
+  .room-header {
+    @apply flex justify-between items-center mb-4 bg-gray-800 p-4 rounded-t-lg border border-gray-700;
+  }
+
+  .code-area {
+    @apply w-full h-[80vh] p-6 bg-[#1e1e1e] text-gray-300 font-mono text-sm leading-relaxed border border-gray-700 rounded-b-lg focus:outline-none shadow-inner resize-none;
+  }
+}
