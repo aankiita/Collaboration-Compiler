@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: import.meta.env.VITE_BACKEND_URL || "http://localhost:5000",
+  baseURL: "https://collaboration-compiler-1.onrender.com",
 });
 
 API.interceptors.request.use((req) => {
